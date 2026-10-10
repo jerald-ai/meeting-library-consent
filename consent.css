@@ -1,0 +1,18 @@
+:root { --bg: #f7f7f8; --surface: #fff; --text: #1d1d22; --muted: #6b6b76; --border: #e2e2e7; --accent: #3b5bdb; --bad: #c92a2a; color-scheme: light dark; }
+@media (prefers-color-scheme: dark) { :root { --bg: #17171b; --surface: #202026; --text: #ececf1; --muted: #9a9aa6; --border: #33333b; --accent: #748ffc; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 "Segoe UI", system-ui, sans-serif; }
+main { max-width: 480px; margin: 10vh auto; padding: 0 16px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+h1 { font-size: 20px; margin: 0 0 12px; }
+p { margin: 8px 0; }
+.muted { color: var(--muted); font-size: 13px; }
+.error { color: var(--bad); }
+ul { padding-left: 20px; margin: 8px 0; }
+.row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+input { flex: 1; min-width: 200px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); font: inherit; }
+button { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button:disabled { opacity: 0.5; cursor: default; }
+.link { border: 0; background: none; color: var(--accent); padding: 0; font-size: 13px; }
+.host { font-family: ui-monospace, monospace; }
