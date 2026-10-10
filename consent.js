@@ -16,6 +16,9 @@ const el = (tag, attrs = {}, ...kids) => {
 const show = (...kids) => app.replaceChildren(el("div", { class: "card" }, ...kids));
 const errorLine = (msg) => el("p", { class: "error" }, msg);
 
+// Read before the Supabase client consumes it: did we just arrive from an email link?
+const arrivedFromEmail = /access_token=/.test(location.hash);
+
 // "implicit": the email link carries the sign-in itself, so it works in whichever
 // browser or device opens it (PKCE would need the same browser that asked).
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
@@ -39,7 +42,25 @@ async function main() {
     return signIn("That sign-in link was already used or has expired. Ask for a new one.");
   }
   if (!session) return signIn(error ? `Sign-in failed: ${error.message}` : undefined);
+  // The email link points back at the request that was open when the email was asked for,
+  // which may be outdated by now. Never approve that one: send the user back to Claude.
+  if (arrivedFromEmail) return signedIn(session);
   return consent(session);
+}
+
+function signedIn(session) {
+  show(
+    el("h1", {}, "✅ You're signed in on this browser"),
+    el("p", {}, `Signed in as ${session.user.email}.`),
+    el(
+      "p",
+      {},
+      "Now go back to Claude and click ",
+      el("strong", {}, "Connect"),
+      " once more, in this same browser. You'll then see the Allow button directly, without another email.",
+    ),
+    el("p", { class: "muted" }, "You can close this tab."),
+  );
 }
 
 function signIn(message) {
@@ -61,11 +82,17 @@ function signIn(message) {
     status.className = error ? "error" : "";
     status.textContent = error
       ? `Could not send the email: ${error.message}`
-      : "Check your email and click Sign in once. Any browser works; the page continues there.";
+      : "Check your email and click Sign in once. Then go back to Claude and click Connect again.";
   });
   show(
     el("h1", {}, "Sign in to Meeting Library"),
     el("p", {}, "To let Claude read your meetings, first confirm it's you."),
+    el(
+      "p",
+      { class: "muted" },
+      "Tip: open the email link in the same browser where Claude is open. " +
+        "Supabase's free mailer sends at most about 2 emails per hour, so click once.",
+    ),
     message ? errorLine(message) : "",
     el("div", { class: "row" }, input, button),
     status,
