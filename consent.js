@@ -16,8 +16,10 @@ const el = (tag, attrs = {}, ...kids) => {
 const show = (...kids) => app.replaceChildren(el("div", { class: "card" }, ...kids));
 const errorLine = (msg) => el("p", { class: "error" }, msg);
 
+// "implicit": the email link carries the sign-in itself, so it works in whichever
+// browser or device opens it (PKCE would need the same browser that asked).
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { flowType: "pkce", detectSessionInUrl: true, persistSession: true },
+  auth: { flowType: "implicit", detectSessionInUrl: true, persistSession: true },
 });
 
 const id = authorizationId(location.href);
@@ -31,8 +33,12 @@ async function main() {
     );
     return;
   }
-  const { data: { session } } = await db.auth.getSession();
-  if (!session) return signIn();
+  const { data: { session }, error } = await db.auth.getSession();
+  const fromLink = new URLSearchParams(location.hash.slice(1));
+  if (!session && fromLink.get("error_code") === "otp_expired") {
+    return signIn("That sign-in link was already used or has expired. Ask for a new one.");
+  }
+  if (!session) return signIn(error ? `Sign-in failed: ${error.message}` : undefined);
   return consent(session);
 }
 
@@ -55,7 +61,7 @@ function signIn(message) {
     status.className = error ? "error" : "";
     status.textContent = error
       ? `Could not send the email: ${error.message}`
-      : "Check your email and click Sign in. Open the link in this same browser; this page continues there.";
+      : "Check your email and click Sign in once. Any browser works; the page continues there.";
   });
   show(
     el("h1", {}, "Sign in to Meeting Library"),
